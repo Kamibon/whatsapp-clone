@@ -1,0 +1,45 @@
+
+services:
+  nextjs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nextjs-chat
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - redis
+
+  redis:
+    image: "redis:alpine"
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  postgres: 
+    image: postgres:15 
+    container_name: postgres 
+    restart: always 
+    environment: 
+      POSTGRES_USER: postgres 
+      POSTGRES_PASSWORD: postgres 
+      POSTGRES_DB: chat
+    ports: 
+      - "5431:5432" 
+    volumes: 
+      - postgres_data:/var/lib/postgresql/data
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - nextjs
+
+volumes: 
+  postgres_data:

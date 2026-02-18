@@ -1,0 +1,67 @@
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { PromiseStatus, User } from "../types/interfaces";
+import axios from "axios";
+
+interface State {
+  findAllUsersResponse: User[];
+  findAllUsersStatus: PromiseStatus;
+  findUserByIdResponse?: User;
+  findUserByIdStatus: PromiseStatus;
+}
+
+const initialState: State = {
+  findAllUsersResponse: [],
+  findAllUsersStatus: "idle",
+  findUserByIdStatus: "idle",
+};
+
+const url = "/api/users";
+
+export const findAllUsers = createAsyncThunk("user/findAll", async () => {
+  const res = await axios.get(url);
+
+  return res.data;
+});
+
+export const findUserById = createAsyncThunk("user/findById", async(id: string)=>{
+    const res = await axios.get(url+ "/" + id)
+
+    return res.data
+})
+
+export const deleteUser = createAsyncThunk("user/delete", async(id: string)=>{
+    const res = await axios.delete(url+ "/" + id)
+
+    return res.data
+})
+
+const userSlice = createSlice({
+  name: "user",
+  initialState,
+  reducers: {},
+  extraReducers(builder) {
+    builder.addCase(findAllUsers.fulfilled, (state, action) => {
+      state.findAllUsersResponse = action.payload;
+      state.findAllUsersStatus = "success";
+    });
+    builder.addCase(findAllUsers.rejected, (state) => {
+      state.findAllUsersStatus = "failed";
+    });
+    builder.addCase(findAllUsers.pending, (state) => {
+      state.findAllUsersStatus = "loading";
+    });
+    builder.addCase(findUserById.fulfilled, (state, action) => {
+      state.findUserByIdResponse = action.payload;
+      state.findUserByIdStatus = "success";
+    });
+    builder.addCase(findUserById.rejected, (state) => {
+      state.findUserByIdStatus = "failed";
+    });
+    builder.addCase(findUserById.pending, (state) => {
+      state.findUserByIdStatus = "loading";
+    });
+  },
+});
+
+export const {} = userSlice.actions;
+export default userSlice.reducer;
