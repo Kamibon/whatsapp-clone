@@ -8,6 +8,7 @@ interface State {
   findAllChatsResponse: Chat[];
   findAllChatsStatus: PromiseStatus;
   createChatStatus: PromiseStatus;
+  createChatResponse?: Chat 
   addMessageToChatStatus: PromiseStatus
   findMessagesByChatResponse: Message[]
   findMessagesByChatStatus: PromiseStatus
@@ -72,6 +73,9 @@ export const chatSlice = createSlice({
     setSelectedChat: (state, action) => {
       state.selectedChat = action.payload;
     },
+    setCreateChatStatus: (state, action)=>{
+      state.createChatStatus = action.payload
+    }
   },
   extraReducers(builder) {
     builder.addCase(findAllChats.fulfilled, (state, action) => {
@@ -86,6 +90,7 @@ export const chatSlice = createSlice({
     });
     builder.addCase(createChat.fulfilled, (state, action) => {
       state.createChatStatus = "success";
+      state.createChatResponse = action.payload.chat
     });
     builder.addCase(createChat.pending, (state, action) => {
       state.createChatStatus = "loading";
@@ -115,5 +120,5 @@ export const chatSlice = createSlice({
   },
 });
 
-export const { setSelectedChat } = chatSlice.actions;
+export const { setCreateChatStatus, setSelectedChat } = chatSlice.actions;
 export default chatSlice.reducer;

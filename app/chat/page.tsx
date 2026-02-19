@@ -18,6 +18,7 @@ import {
   createChat,
   findAllChats,
   findMessagesByChatId,
+  setCreateChatStatus,
   setSelectedChat,
 } from "../_redux/chatSlice";
 
@@ -28,6 +29,7 @@ import { Logout } from "../_icons/logout";
 import React from "react";
 import { isDifferentDay } from "../lib/utils";
 import EmojiPicker from "emoji-picker-react";
+import { MessageIcon } from "../_icons/message";
 
 export default function Chat() {
   const userState = useAppSelector((state) => state.user);
@@ -39,6 +41,8 @@ export default function Chat() {
     DefaultEventsMap
   > | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [newChat, setNewChat] = useState(false);
+  const [filter, setFilter] = useState("");
 
   const messagesEndRef = useRef(null);
 
@@ -55,6 +59,16 @@ export default function Chat() {
   useEffect(() => {
     dispatch(findAllUsers());
   }, []);
+
+  useEffect(() => {
+    if (
+      chatState.createChatStatus === "success" &&
+      chatState.createChatResponse
+    ) {
+      dispatch(setSelectedChat(chatState.createChatResponse.id));
+      dispatch(setCreateChatStatus("idle"));
+    }
+  }, [chatState.createChatResponse, chatState.createChatStatus]);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -89,7 +103,6 @@ export default function Chat() {
       });
 
       socketInstance.on("message", (msg) => {
-        console.log("on message", msg);
         setMessages((prevMessages) => [...prevMessages, msg]);
       });
 
@@ -132,50 +145,65 @@ export default function Chat() {
   return (
     <div className="min-h-screen mt-[-10%] lg:mt-[-5%] flex justify-center fixed px-4 w-full z-20">
       <div className=" h-150 flex flex-row z-20 w-full">
-        <div className="bg-white w-[40%]">
+        <div className="bg-white w-[40%] relative">
           <div className="h-[15%] bg-gray-300 flex items-center justify-between px-4">
             <Avatar size="md" />
             <button>
               <Logout />
             </button>
           </div>
-          <Searchbar />
-          {/* {userState.findAllUsersResponse.map((item) => (
-            <ChatListElement
-              onClick={() => {
-                dispatch(createChat({ userId1: userId, userId2: item.id }));
-                socket?.emit("joinRoom", item.id);
-              }}
-              contactName={item.id}
-              lastMessage="Ciao"
-              lastMessageDate="15:51"
-              key={item.id}
+          {newChat && (
+            <Searchbar
+              placeholder="Cerca tra gli utenti"
+              onChangeText={(text) => setFilter(text)}
             />
-          ))} */}
-          {chatState.findAllChatsResponse.map((item) => (
-            <ChatListElement
-              onClick={() => {
-                dispatch(setSelectedChat(item.id));
-                socket?.emit("joinRoom", item.id);
-              }}
-              contactName={
-                item.participants.find((elem) => elem.userId !== userId)!.user
-                  .username
-              }
-              lastMessage={
-                item.messages.length > 0 ? item.messages[0].content : ""
-              }
-              lastMessageDate={
-                item.messages.length > 0
-                  ? new Date(item.messages[0].createdAt).toLocaleTimeString(
-                      [],
-                      { hour: "2-digit", minute: "2-digit" },
-                    )
-                  : ""
-              }
-              key={item.id}
-            />
-          ))}
+          )}
+          {newChat &&
+            userState.findAllUsersResponse.filter(user => user.username.toLowerCase().includes(filter.toLowerCase())).map((item) => (
+              <ChatListElement
+                onClick={() => {
+                  dispatch(createChat({ userId1: userId, userId2: item.id }));
+                  setNewChat(false);
+                  socket?.emit("joinRoom", item.id);
+                }}
+                contactName={
+                  userState.findAllUsersResponse.find((i) => i.id === item.id)
+                    ?.username ?? ""
+                }
+                key={item.id}
+              />
+            ))}
+          {!newChat &&
+            chatState.findAllChatsResponse.map((item) => (
+              <ChatListElement
+                onClick={() => {
+                  dispatch(setSelectedChat(item.id));
+                  socket?.emit("joinRoom", item.id);
+                }}
+                contactName={
+                  item.participants.find((elem) => elem.userId !== userId)!.user
+                    .username
+                }
+                lastMessage={
+                  item.messages.length > 0 ? item.messages[0].content : ""
+                }
+                lastMessageDate={
+                  item.messages.length > 0
+                    ? new Date(item.messages[0].createdAt).toLocaleTimeString(
+                        [],
+                        { hour: "2-digit", minute: "2-digit" },
+                      )
+                    : ""
+                }
+                key={item.id}
+              />
+            ))}
+          <button
+            onClick={() => setNewChat((prev) => !prev)}
+            className="size-12 cursor-pointer hover:bg-green-600 bg-green-700 flex items-center justify-center rounded-full absolute bottom-4 right-4"
+          >
+            <MessageIcon />
+          </button>
         </div>
         {chatState.selectedChat && (
           <div className="bg-gray-500 w-[60%]">
@@ -190,7 +218,6 @@ export default function Chat() {
                       )!.user.username
                     }
                   </span>
-                  <span className="text-sm text-gray-500">Ultimo accesso</span>
                 </div>
                 <div className="flex items-center gap-3 ">
                   <Paperclip />
@@ -218,7 +245,15 @@ export default function Chat() {
                   <Message
                     fromSender={item.senderId !== userId}
                     text={item.content}
-                    sentAtTime={`${new Date(item.createdAt).getHours().toString()}: ${new Date(item.createdAt).getMinutes().toString().padStart(2, "0")} `}
+                    sentAtTime={`${new Date(item.createdAt).getHours().toString()}: 
+                    ${new Date(item.createdAt).getMinutes().toString().padStart(2, "0")} `}
+                    seen={item.readReceipts.some(
+                      (receipt) =>
+                        receipt.userId ===
+                        currentChat?.participants.filter(
+                          (p) => p.userId !== userId,
+                        )[0].userId,
+                    )}
                   />
                 </React.Fragment>
               ))}

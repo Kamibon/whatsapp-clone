@@ -24,6 +24,7 @@ export interface MessageType {
   createdAt: Date;
   updatedAt?: Date;
   attachments?: Attachment[];
+  readReceipts: ReadReceipt[]
 }
 
 export interface CreateMessage {

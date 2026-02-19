@@ -1,15 +1,20 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
+import { useAppDispatch, useAppSelector } from "@/app/_redux/store";
+import { createUser } from "@/app/_redux/userSlice";
 
 export default function Login() {
   const [isSignUp, setIsSignUp] = useState(true);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
 
-  async function handleSubmit() {
-    if (isSignUp) return;
+  const usersState = useAppSelector((state) => state.user);
 
+  const dispatch = useAppDispatch();
+
+  const login = async () => {
     const res = await signIn("credentials", {
       username,
       password,
@@ -21,25 +26,59 @@ export default function Login() {
     } else {
       alert("Credenziali non valide");
     }
+  };
+
+  async function handleSubmit() {
+    if (isSignUp) {
+      dispatch(
+        createUser({
+          username: username,
+          password: password,
+          displayName: username,
+          phoneNumber: phoneNumber,
+        }),
+      );
+    }
+    else
+    login();
   }
 
+  useEffect(() => {
+    if (usersState.createUserStatus === "success") {
+      login()
+    }
+    if(usersState.createUserStatus === "failed"){
+      alert('Signup failed')
+    }
+  }, [usersState.createUserStatus]);
+
   return (
-    <div className="min-h-screen mt-[-10%] flex justify-center fixed px-4 w-full z-20">
+    <div className="min-h-screen mt-[-10%] lg:mt-[-5%] flex justify-center fixed px-4 w-full z-20">
       <div className=" h-150 flex flex-row z-20 w-full">
-        <div className=" bg-white flex flex-col gap-3 justify-start h-[40%] px-3 py-4 shadow-2xl w-full">
+        <div className=" bg-white flex flex-col gap-3 justify-start  px-3 py-4 rounded-2xl shadow-2xl w-full">
           <span className="font-bold text-2xl">
             {isSignUp ? "Registrati" : "Login"}
           </span>
+          {isSignUp && (
+            <input
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              value={phoneNumber}
+              placeholder="Numero di telefono"
+              className=" border-b focus:outline-none focus:ring-0 p-2"
+            />
+          )}
           <input
             onChange={(e) => setUsername(e.target.value)}
-            placeholder="Numero di telefono"
-            className=" border-b focus:outline-none focus:ring-0 p-1"
+            value={username}
+            placeholder="Username"
+            className=" border-b focus:outline-none focus:ring-0 p-2"
           />
           <input
             onChange={(e) => setPassword(e.target.value)}
+            value={password}
             placeholder="Password"
             type="password"
-            className=" border-b focus:outline-none focus:ring-0 p-1"
+            className=" border-b focus:outline-none focus:ring-0 p-2"
           />
           <div className=" flex items-center gap-4 py-4">
             <button

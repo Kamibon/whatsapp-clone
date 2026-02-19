@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { PromiseStatus, User } from "../types/interfaces";
+import { CreateUserRequest, PromiseStatus, User } from "../types/interfaces";
 import axios from "axios";
 
 interface State {
@@ -7,12 +7,14 @@ interface State {
   findAllUsersStatus: PromiseStatus;
   findUserByIdResponse?: User;
   findUserByIdStatus: PromiseStatus;
+  createUserStatus: PromiseStatus
 }
 
 const initialState: State = {
   findAllUsersResponse: [],
   findAllUsersStatus: "idle",
   findUserByIdStatus: "idle",
+  createUserStatus: "idle"
 };
 
 const url = "/api/users";
@@ -23,17 +25,32 @@ export const findAllUsers = createAsyncThunk("user/findAll", async () => {
   return res.data;
 });
 
-export const findUserById = createAsyncThunk("user/findById", async(id: string)=>{
-    const res = await axios.get(url+ "/" + id)
+export const findUserById = createAsyncThunk(
+  "user/findById",
+  async (id: string) => {
+    const res = await axios.get(url + "/" + id);
 
-    return res.data
-})
+    return res.data;
+  },
+);
 
-export const deleteUser = createAsyncThunk("user/delete", async(id: string)=>{
-    const res = await axios.delete(url+ "/" + id)
+export const createUser = createAsyncThunk(
+  "user/create",
+  async (request: CreateUserRequest) => {
+    const res = await axios.post(url, request);
 
-    return res.data
-})
+    return res.data;
+  },
+);
+
+export const deleteUser = createAsyncThunk(
+  "user/delete",
+  async (id: string) => {
+    const res = await axios.delete(url + "/" + id);
+
+    return res.data;
+  },
+);
 
 const userSlice = createSlice({
   name: "user",
@@ -59,6 +76,15 @@ const userSlice = createSlice({
     });
     builder.addCase(findUserById.pending, (state) => {
       state.findUserByIdStatus = "loading";
+    });
+    builder.addCase(createUser.fulfilled, (state, action) => {
+      state.createUserStatus = "success";
+    });
+    builder.addCase(createUser.rejected, (state) => {
+      state.createUserStatus = "failed";
+    });
+    builder.addCase(createUser.pending, (state) => {
+      state.createUserStatus = "loading";
     });
   },
 });
