@@ -7,14 +7,14 @@ interface State {
   findAllUsersStatus: PromiseStatus;
   findUserByIdResponse?: User;
   findUserByIdStatus: PromiseStatus;
-  createUserStatus: PromiseStatus
+  createUserStatus: PromiseStatus;
 }
 
 const initialState: State = {
   findAllUsersResponse: [],
   findAllUsersStatus: "idle",
   findUserByIdStatus: "idle",
-  createUserStatus: "idle"
+  createUserStatus: "idle",
 };
 
 const url = "/api/users";

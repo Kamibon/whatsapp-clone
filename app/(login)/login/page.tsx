@@ -38,17 +38,15 @@ export default function Login() {
           phoneNumber: phoneNumber,
         }),
       );
-    }
-    else
-    login();
+    } else login();
   }
 
   useEffect(() => {
     if (usersState.createUserStatus === "success") {
-      login()
+      login();
     }
-    if(usersState.createUserStatus === "failed"){
-      alert('Signup failed')
+    if (usersState.createUserStatus === "failed") {
+      alert("Signup failed");
     }
   }, [usersState.createUserStatus]);
 

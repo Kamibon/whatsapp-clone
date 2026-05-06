@@ -1,6 +1,11 @@
 import { Message } from "@/generated/prisma/client";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { Chat, CreateChatRequest, CreateMessage, PromiseStatus } from "../types/interfaces";
+import {
+  Chat,
+  CreateChatRequest,
+  CreateMessageRequest,
+  PromiseStatus,
+} from "../types/interfaces";
 import axios from "axios";
 
 interface State {
@@ -8,10 +13,10 @@ interface State {
   findAllChatsResponse: Chat[];
   findAllChatsStatus: PromiseStatus;
   createChatStatus: PromiseStatus;
-  createChatResponse?: Chat 
-  addMessageToChatStatus: PromiseStatus
-  findMessagesByChatResponse: Message[]
-  findMessagesByChatStatus: PromiseStatus
+  createChatResponse?: Chat;
+  addMessageToChatStatus: PromiseStatus;
+  findMessagesByChatResponse: Message[];
+  findMessagesByChatStatus: PromiseStatus;
 }
 
 const initialState: State = {
@@ -21,7 +26,7 @@ const initialState: State = {
   createChatStatus: "idle",
   addMessageToChatStatus: "idle",
   findMessagesByChatResponse: [],
-  findMessagesByChatStatus: "idle"
+  findMessagesByChatStatus: "idle",
 };
 
 const url = "/api/chats";
@@ -44,25 +49,23 @@ export const createChat = createAsyncThunk(
 );
 
 export const findMessagesByChatId = createAsyncThunk(
-  "chat/findMessages", 
-  async(id:string)=>{
+  "chat/findMessages",
+  async (id: string) => {
     const res = await axios.get(url + "/messages/" + id);
 
     return res.data;
-  }
-)
+  },
+);
 
 export const addMessageToChat = createAsyncThunk(
   "chat/createMessage",
-  async (body: CreateMessage) => {
+  async (body: CreateMessageRequest) => {
     try {
       const res = await axios.post(url + "/messages/" + body.chatId, body);
-      console.log(res)
+      console.log(res);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-   
-   
   },
 );
 
@@ -73,9 +76,9 @@ export const chatSlice = createSlice({
     setSelectedChat: (state, action) => {
       state.selectedChat = action.payload;
     },
-    setCreateChatStatus: (state, action)=>{
-      state.createChatStatus = action.payload
-    }
+    setCreateChatStatus: (state, action) => {
+      state.createChatStatus = action.payload;
+    },
   },
   extraReducers(builder) {
     builder.addCase(findAllChats.fulfilled, (state, action) => {
@@ -90,7 +93,7 @@ export const chatSlice = createSlice({
     });
     builder.addCase(createChat.fulfilled, (state, action) => {
       state.createChatStatus = "success";
-      state.createChatResponse = action.payload.chat
+      state.createChatResponse = action.payload.chat;
     });
     builder.addCase(createChat.pending, (state, action) => {
       state.createChatStatus = "loading";
@@ -108,8 +111,8 @@ export const chatSlice = createSlice({
       state.addMessageToChatStatus = "failed";
     });
     builder.addCase(findMessagesByChatId.fulfilled, (state, action) => {
-      state.findMessagesByChatResponse = action.payload
-      state.findMessagesByChatStatus = 'success'
+      state.findMessagesByChatResponse = action.payload;
+      state.findMessagesByChatStatus = "success";
     });
     builder.addCase(findMessagesByChatId.pending, (state, action) => {
       state.findMessagesByChatStatus = "loading";

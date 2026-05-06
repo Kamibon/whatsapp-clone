@@ -1,4 +1,3 @@
-
 import client from "prom-client";
 
 const collectDefaultMetrics = client.collectDefaultMetrics;
@@ -13,4 +12,3 @@ export async function GET(request: Request) {
     },
   });
 }
-

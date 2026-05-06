@@ -159,20 +159,24 @@ export default function Chat() {
             />
           )}
           {newChat &&
-            userState.findAllUsersResponse.filter(user => user.username.toLowerCase().includes(filter.toLowerCase())).map((item) => (
-              <ChatListElement
-                onClick={() => {
-                  dispatch(createChat({ userId1: userId, userId2: item.id }));
-                  setNewChat(false);
-                  socket?.emit("joinRoom", item.id);
-                }}
-                contactName={
-                  userState.findAllUsersResponse.find((i) => i.id === item.id)
-                    ?.username ?? ""
-                }
-                key={item.id}
-              />
-            ))}
+            userState.findAllUsersResponse
+              .filter((user) =>
+                user.username.toLowerCase().includes(filter.toLowerCase()),
+              )
+              .map((item) => (
+                <ChatListElement
+                  onClick={() => {
+                    dispatch(createChat({ userId1: userId, userId2: item.id }));
+                    setNewChat(false);
+                    socket?.emit("joinRoom", item.id);
+                  }}
+                  contactName={
+                    userState.findAllUsersResponse.find((i) => i.id === item.id)
+                      ?.username ?? ""
+                  }
+                  key={item.id}
+                />
+              ))}
           {!newChat &&
             chatState.findAllChatsResponse.map((item) => (
               <ChatListElement
