@@ -8,7 +8,7 @@ export interface User {
   createdAt: Date;
 }
 
-export type CreateUserRequest = Omit<User, "id | createdAt">;
+export type CreateUserRequest = Omit<User, "id" | "createdAt">;
 
 export interface MessageType {
   id: string;
@@ -23,7 +23,7 @@ export interface MessageType {
 
 export type CreateMessageRequest = Omit<
   MessageType,
-  "id | chatId | createdAt | updatedAt "
+  "id" | "createdAt" | "updatedAt"
 >;
 
 export interface Attachment {
@@ -46,6 +46,11 @@ export interface Chat {
 export interface CreateChatRequest {
   userId1: string;
   userId2: string;
+}
+
+export interface ChatCreatedResponse {
+  message: string,
+  chat: Chat
 }
 
 export interface Participant {

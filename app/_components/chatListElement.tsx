@@ -1,5 +1,6 @@
 import React from "react";
 import Avatar from "./avatar";
+import { clipWords } from "../lib/utils";
 
 interface Props {
   contactName: string;
@@ -20,7 +21,7 @@ export const ChatListElement = (props: Props) => {
         <div className=" flex flex-col  gap-1 pl-2">
           <span className="font-semibold">{contactName}</span>
           <span className=" text-gray-500 text-sm hidden md:block">
-            {lastMessage}
+            {clipWords(lastMessage, 25)}
           </span>
         </div>
         <span className=" text-sm text-gray-400 hidden lg:block">

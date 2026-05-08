@@ -1,12 +1,14 @@
-import { Message } from "@/generated/prisma/client";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import axios from "axios";
 import {
   Chat,
+  ChatCreatedResponse,
   CreateChatRequest,
   CreateMessageRequest,
+  MessageType,
   PromiseStatus,
 } from "../types/interfaces";
-import axios from "axios";
+import { create, findAll, findById } from "./service";
 
 interface State {
   selectedChat: string | null;
@@ -15,7 +17,7 @@ interface State {
   createChatStatus: PromiseStatus;
   createChatResponse?: Chat;
   addMessageToChatStatus: PromiseStatus;
-  findMessagesByChatResponse: Message[];
+  findMessagesByChatResponse: MessageType[];
   findMessagesByChatStatus: PromiseStatus;
 }
 
@@ -34,26 +36,21 @@ const url = "/api/chats";
 export const findAllChats = createAsyncThunk(
   "chat/findAll",
   async (id: string) => {
-    const res = await axios.get(url + "/" + id);
-
-    return res.data;
+    return findAll<Chat>(url, id);
   },
 );
 
 export const createChat = createAsyncThunk(
   "chat/create",
   async (body: CreateChatRequest) => {
-    const res = await axios.post(url, body);
-    return res.data;
+    return create<CreateChatRequest, ChatCreatedResponse>(url, body);
   },
 );
 
 export const findMessagesByChatId = createAsyncThunk(
   "chat/findMessages",
   async (id: string) => {
-    const res = await axios.get(url + "/messages/" + id);
-
-    return res.data;
+    return findById<MessageType[]>(url + "/messages/", id);
   },
 );
 
@@ -61,8 +58,7 @@ export const addMessageToChat = createAsyncThunk(
   "chat/createMessage",
   async (body: CreateMessageRequest) => {
     try {
-      const res = await axios.post(url + "/messages/" + body.chatId, body);
-      console.log(res);
+      await axios.post(url + "/messages/" + body.chatId, body);
     } catch (error) {
       console.log(error);
     }
@@ -85,39 +81,39 @@ export const chatSlice = createSlice({
       state.findAllChatsResponse = action.payload;
       state.findAllChatsStatus = "success";
     });
-    builder.addCase(findAllChats.pending, (state, action) => {
+    builder.addCase(findAllChats.pending, (state) => {
       state.findAllChatsStatus = "loading";
     });
-    builder.addCase(findAllChats.rejected, (state, action) => {
+    builder.addCase(findAllChats.rejected, (state) => {
       state.findAllChatsStatus = "failed";
     });
     builder.addCase(createChat.fulfilled, (state, action) => {
       state.createChatStatus = "success";
       state.createChatResponse = action.payload.chat;
     });
-    builder.addCase(createChat.pending, (state, action) => {
+    builder.addCase(createChat.pending, (state) => {
       state.createChatStatus = "loading";
     });
-    builder.addCase(createChat.rejected, (state, action) => {
+    builder.addCase(createChat.rejected, (state) => {
       state.createChatStatus = "failed";
     });
-    builder.addCase(addMessageToChat.fulfilled, (state, action) => {
+    builder.addCase(addMessageToChat.fulfilled, (state) => {
       state.addMessageToChatStatus = "success";
     });
-    builder.addCase(addMessageToChat.pending, (state, action) => {
+    builder.addCase(addMessageToChat.pending, (state) => {
       state.addMessageToChatStatus = "loading";
     });
-    builder.addCase(addMessageToChat.rejected, (state, action) => {
+    builder.addCase(addMessageToChat.rejected, (state) => {
       state.addMessageToChatStatus = "failed";
     });
     builder.addCase(findMessagesByChatId.fulfilled, (state, action) => {
       state.findMessagesByChatResponse = action.payload;
       state.findMessagesByChatStatus = "success";
     });
-    builder.addCase(findMessagesByChatId.pending, (state, action) => {
+    builder.addCase(findMessagesByChatId.pending, (state) => {
       state.findMessagesByChatStatus = "loading";
     });
-    builder.addCase(findMessagesByChatId.rejected, (state, action) => {
+    builder.addCase(findMessagesByChatId.rejected, (state) => {
       state.findMessagesByChatStatus = "failed";
     });
   },

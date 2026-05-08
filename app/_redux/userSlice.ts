@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { CreateUserRequest, PromiseStatus, User } from "../types/interfaces";
-import axios from "axios";
+import { create, findAll, findById, remove } from "./service";
 
 interface State {
   findAllUsersResponse: User[];
@@ -20,35 +20,27 @@ const initialState: State = {
 const url = "/api/users";
 
 export const findAllUsers = createAsyncThunk("user/findAll", async () => {
-  const res = await axios.get(url);
-
-  return res.data;
+  return findAll<User>(url);
 });
 
 export const findUserById = createAsyncThunk(
   "user/findById",
   async (id: string) => {
-    const res = await axios.get(url + "/" + id);
-
-    return res.data;
+    return findById<User>(url, id);
   },
 );
 
 export const createUser = createAsyncThunk(
   "user/create",
   async (request: CreateUserRequest) => {
-    const res = await axios.post(url, request);
-
-    return res.data;
+    return create<CreateUserRequest, User>(url, request);
   },
 );
 
 export const deleteUser = createAsyncThunk(
   "user/delete",
   async (id: string) => {
-    const res = await axios.delete(url + "/" + id);
-
-    return res.data;
+    return remove<User>(url, id);
   },
 );
 

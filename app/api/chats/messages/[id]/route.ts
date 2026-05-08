@@ -2,13 +2,16 @@ import { prisma } from "@/app/lib/prisma";
 import redis from "@/app/lib/redis";
 import { withMetrics } from "@/app/lib/withMetrics";
 
-const findMessagesByChatId = async (request: Request, { params }) => {
+interface ParamsProps {
+  params: {id: string}
+}
+
+const findMessagesByChatId = async (request: Request, { params }: ParamsProps) => {
   const { id } = await params;
 
   const cachedMessages = await redis.get(`messages:${id}`);
 
   if (cachedMessages) {
-    console.log("cacheee");
     return new Response(cachedMessages, { status: 200 });
   }
 
@@ -29,7 +32,7 @@ const findMessagesByChatId = async (request: Request, { params }) => {
   return Response.json(messages);
 };
 
-const addMessageToChat = async (request: Request, { params }) => {
+const addMessageToChat = async (request: Request, { params }: ParamsProps) => {
   const { id } = await params;
 
   const body = await request.json();

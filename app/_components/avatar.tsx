@@ -22,6 +22,7 @@ export default function Avatar(props: Props) {
   return (
     <div className="flex flex-wrap justify-center gap-12">
       <Image
+        loading="eager"
         height={mySize}
         width={mySize}
         className="rounded-full"

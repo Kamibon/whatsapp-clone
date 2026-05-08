@@ -22,7 +22,7 @@ export default function Login() {
     });
 
     if (res?.ok) {
-      window.location.href = "/chat";
+      window.location.href = "/";
     } else {
       alert("Credenziali non valide");
     }
@@ -74,6 +74,7 @@ export default function Login() {
           <input
             onChange={(e) => setPassword(e.target.value)}
             value={password}
+            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
             placeholder="Password"
             type="password"
             className=" border-b focus:outline-none focus:ring-0 p-2"
