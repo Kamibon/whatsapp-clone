@@ -36,7 +36,7 @@ const editUser = async (req: Request, { params }) => {
   try {
     await prisma.user.update({ where: { id: id }, data: body });
   } catch (error) {
-   return  Response.json("Failed to delete", { status: 500 });
+    return Response.json("Failed to delete", { status: 500 });
   }
 };
 

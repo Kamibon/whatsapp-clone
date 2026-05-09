@@ -1,6 +1,6 @@
 import { prisma } from "@/app/lib/prisma";
 import { withMetrics } from "@/app/lib/withMetrics";
-import bcrypt from "bcrypt"
+import bcrypt from "bcrypt";
 
 export const dynamic = "force-dynamic";
 
@@ -13,10 +13,9 @@ const findAllUsers = async (req: Request) => {
 const createUser = async (req: Request) => {
   const body = await req.json();
 
-  const hashed = await bcrypt.hash(body.password, 10)
+  const hashed = await bcrypt.hash(body.password, 10);
 
   try {
-    
     await prisma.user.create({
       data: {
         username: body.username,

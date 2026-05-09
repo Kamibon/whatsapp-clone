@@ -7,7 +7,6 @@ interface Props {
 }
 
 export default function Searchbar(props: Props) {
-  
   const { extraClasses, placeholder, onChangeText } = props;
 
   return (

@@ -1,54 +1,46 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { CreateUserRequest, PromiseStatus, User } from "../types/interfaces";
-import axios from "axios";
+import { create, findAll, findById, remove } from "./service";
 
 interface State {
   findAllUsersResponse: User[];
   findAllUsersStatus: PromiseStatus;
   findUserByIdResponse?: User;
   findUserByIdStatus: PromiseStatus;
-  createUserStatus: PromiseStatus
+  createUserStatus: PromiseStatus;
 }
 
 const initialState: State = {
   findAllUsersResponse: [],
   findAllUsersStatus: "idle",
   findUserByIdStatus: "idle",
-  createUserStatus: "idle"
+  createUserStatus: "idle",
 };
 
 const url = "/api/users";
 
 export const findAllUsers = createAsyncThunk("user/findAll", async () => {
-  const res = await axios.get(url);
-
-  return res.data;
+  return findAll<User>(url);
 });
 
 export const findUserById = createAsyncThunk(
   "user/findById",
   async (id: string) => {
-    const res = await axios.get(url + "/" + id);
-
-    return res.data;
+    return findById<User>(url, id);
   },
 );
 
 export const createUser = createAsyncThunk(
   "user/create",
   async (request: CreateUserRequest) => {
-    const res = await axios.post(url, request);
-
-    return res.data;
+    return create<CreateUserRequest, User>(url, request);
   },
 );
 
 export const deleteUser = createAsyncThunk(
   "user/delete",
   async (id: string) => {
-    const res = await axios.delete(url + "/" + id);
-
-    return res.data;
+    return remove<User>(url, id);
   },
 );
 
@@ -58,7 +50,7 @@ const userSlice = createSlice({
   reducers: {},
   extraReducers(builder) {
     builder.addCase(findAllUsers.fulfilled, (state, action) => {
-      state.findAllUsersResponse = action.payload;
+      state.findAllUsersResponse = action.payload.data;
       state.findAllUsersStatus = "success";
     });
     builder.addCase(findAllUsers.rejected, (state) => {
@@ -68,7 +60,7 @@ const userSlice = createSlice({
       state.findAllUsersStatus = "loading";
     });
     builder.addCase(findUserById.fulfilled, (state, action) => {
-      state.findUserByIdResponse = action.payload;
+      state.findUserByIdResponse = action.payload as User;
       state.findUserByIdStatus = "success";
     });
     builder.addCase(findUserById.rejected, (state) => {
@@ -77,7 +69,7 @@ const userSlice = createSlice({
     builder.addCase(findUserById.pending, (state) => {
       state.findUserByIdStatus = "loading";
     });
-    builder.addCase(createUser.fulfilled, (state, action) => {
+    builder.addCase(createUser.fulfilled, (state) => {
       state.createUserStatus = "success";
     });
     builder.addCase(createUser.rejected, (state) => {

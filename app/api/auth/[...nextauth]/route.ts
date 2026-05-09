@@ -34,8 +34,6 @@ export const authOptions = {
           where: { username: credentials.username },
         });
 
-        console.log('user:', user)
-
         if (!user) return null;
 
         const isValid = await bcrypt.compare(
@@ -54,25 +52,25 @@ export const authOptions = {
     }),
   ],
   callbacks: {
-  async jwt({ token, user }) {
-    if (user) {
-      token.id = user.id;
-      token.username = user.username;
-      token.phoneNumber = user.phoneNumber;
-    }
-    return token;
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.username = user.username;
+        token.phoneNumber = user.phoneNumber;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token) {
+        session.user = {
+          id: token.id,
+          username: token.username,
+          phoneNumber: token.phoneNumber,
+        };
+      }
+      return session;
+    },
   },
-  async session({ session, token }) {
-    if (token) {
-      session.user = {
-        id: token.id,
-        username: token.username,
-        phoneNumber: token.phoneNumber,
-      };
-    }
-    return session;
-  },
-},
 
   pages: {
     signIn: "/login",

@@ -1,8 +1,7 @@
 import { httpRequestDuration } from "./metrics";
 
-
 export function withMetrics(handler, routeName: string) {
-  return async (req: Request, ...args: any[]) => {
+  return async (req: Request, ...args: unknown[]) => {
     const end = httpRequestDuration.startTimer({
       method: req.method,
       route: routeName,

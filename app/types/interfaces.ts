@@ -8,13 +8,7 @@ export interface User {
   createdAt: Date;
 }
 
-export interface CreateUserRequest {
-  username: string;
-  password: string;
-  displayName: string;
-  phoneNumber: string;
-  avatarUrl?: string;
-}
+export type CreateUserRequest = Omit<User, "id" | "createdAt">;
 
 export interface MessageType {
   id: string;
@@ -24,15 +18,13 @@ export interface MessageType {
   createdAt: Date;
   updatedAt?: Date;
   attachments?: Attachment[];
-  readReceipts: ReadReceipt[]
+  readReceipts: ReadReceipt[];
 }
 
-export interface CreateMessage {
-  chatId: string;
-  senderId: string;
-  content: string;
-  attachments?: Attachment[];
-}
+export type CreateMessageRequest = Omit<
+  MessageType,
+  "id" | "createdAt" | "updatedAt"
+>;
 
 export interface Attachment {
   id: string;
@@ -48,12 +40,17 @@ export interface Chat {
   createdAt: Date;
   updatedAt: Date;
   participants: Participant[];
-  messages: MessageType[]
+  messages: MessageType[];
 }
 
 export interface CreateChatRequest {
   userId1: string;
   userId2: string;
+}
+
+export interface ChatCreatedResponse {
+  message: string,
+  chat: Chat
 }
 
 export interface Participant {
@@ -78,3 +75,10 @@ export interface ReadReceipt {
 }
 
 export type PromiseStatus = "idle" | "loading" | "failed" | "success";
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  hasMore: boolean;
+  page: number;
+  limit: number;
+}

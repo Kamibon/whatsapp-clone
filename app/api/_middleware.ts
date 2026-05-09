@@ -7,7 +7,7 @@ const httpRequestDurationMicroseconds = new client.Histogram({
   buckets: [0.1, 0.3, 0.5, 1, 2],
 });
 
-export function middleware(req) {
+export function middleware() {
   const start = Date.now();
 
   const response = NextResponse.next();

@@ -1,5 +1,15 @@
+
 export const isDifferentDay = (date1: Date, date2: Date): boolean => {
-    return !(date1.getFullYear() === date2.getFullYear() &&
-             date1.getMonth() === date2.getMonth() &&
-             date1.getDate() === date2.getDate());
-}
+  return !(
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate()
+  );
+};
+
+export const clipWords = (word: string | undefined, length: number) => {
+  if (!word) return "";
+  return word.length <= length ? word : word.substring(0, length).concat('...');
+};
+
+
