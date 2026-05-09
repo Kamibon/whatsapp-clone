@@ -75,3 +75,10 @@ export interface ReadReceipt {
 }
 
 export type PromiseStatus = "idle" | "loading" | "failed" | "success";
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  hasMore: boolean;
+  page: number;
+  limit: number;
+}

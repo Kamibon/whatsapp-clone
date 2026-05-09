@@ -3,16 +3,42 @@ import redis from "@/app/lib/redis";
 import { withMetrics } from "@/app/lib/withMetrics";
 
 interface ParamsProps {
-  params: {id: string}
+  params: { id: string };
 }
 
-const findMessagesByChatId = async (request: Request, { params }: ParamsProps) => {
+const findMessagesByChatId = async (
+  request: Request,
+  { params }: ParamsProps,
+) => {
   const { id } = await params;
 
-  const cachedMessages = await redis.get(`messages:${id}`);
+  const url = new URL(request.url);
+  const page = Math.max(parseInt(url.searchParams.get("page") || "1", 10), 1); // pagina minima = 1
+  const limit = Math.min(
+    Math.max(parseInt(url.searchParams.get("limit") || "20", 10), 1),
+    20,
+  );
 
-  if (cachedMessages) {
-    return new Response(cachedMessages, { status: 200 });
+  const offset = (page - 1) * limit;
+
+  const stream = redis.scanStream({
+    match: `messages:${id}:*`,
+  });
+
+  stream.on("data", async (keys) => {
+    if (keys.length) {
+      await redis.del(keys);
+    }
+  });
+
+  const cacheKey = `messages:${id}:page:${page}:limit:${limit}`;
+  const cachedMessages = await redis.get(cacheKey);
+
+  if (cachedMessages && page > 1) {
+    return new Response(cachedMessages, {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   const messages = await prisma.message.findMany({
@@ -22,14 +48,19 @@ const findMessagesByChatId = async (request: Request, { params }: ParamsProps) =
       attachments: true,
       readReceipts: true,
     },
-    orderBy: {
-      createdAt: "asc",
-    },
+    orderBy: { createdAt: "desc" },
+    skip: offset,
+    take: limit,
   });
 
-  await redis.set(`messages:${id}`, JSON.stringify(messages), "EX", 60 * 60);
+  if (page > 1) {
+    await redis.set(cacheKey, JSON.stringify(messages), "EX", 3600);
+  }
 
-  return Response.json(messages);
+  return new Response(JSON.stringify(messages), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
 };
 
 const addMessageToChat = async (request: Request, { params }: ParamsProps) => {
@@ -45,8 +76,6 @@ const addMessageToChat = async (request: Request, { params }: ParamsProps) => {
         content: body.content,
       },
     });
-
-    await redis.del(`messages:${id}`);
 
     return Response.json(newMessage);
   } catch (error) {

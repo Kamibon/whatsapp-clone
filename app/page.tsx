@@ -7,19 +7,21 @@ import { MenuIcon } from "./_icons/menu";
 import { Microphone } from "./_icons/microphone";
 import { Paperclip } from "./_icons/paperclip";
 import { Smile } from "./_icons/smile";
-import { createChat, setSelectedChat } from "./_redux/chatSlice";
+import {
+  createChat,
+  findMessagesByChatId,
+  setCurrentPage,
+  setSelectedChat,
+} from "./_redux/chatSlice";
 
 import EmojiPicker from "emoji-picker-react";
-import React from "react";
-import { Message } from "./_components/message";
+import { useAuth } from "./_hooks/useAuth";
 import { useChat } from "./_hooks/useChat";
 import { useChatSocket } from "./_hooks/useChatSocket";
+import { useGenerateMessages } from "./_hooks/useGenerateMessages";
 import { Logout } from "./_icons/logout";
 import { MessageIcon } from "./_icons/message";
 import { SendIcon } from "./_icons/send";
-import { isDifferentDay } from "./lib/utils";
-import { useAuth } from "./_hooks/useAuth";
-import { useGenerateMessages } from "./_hooks/useGenerateMessages";
 
 export default function Chat() {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
@@ -33,11 +35,12 @@ export default function Chat() {
     currentChat,
     userState,
     chatState,
+    messageContainerRef,
     messagesEndRef,
   } = useChat();
   const { userId } = useAuth();
   const { input, send, setInput, socket } = useChatSocket(userId, setMessages);
-  const {component} = useGenerateMessages(messages, currentChat!)
+  const { component } = useGenerateMessages(messages, currentChat!);
 
   return (
     <div className="min-h-screen mt-[-25%] sm:mt-[-8%] flex justify-center fixed px-4 w-full z-20">
@@ -126,7 +129,27 @@ export default function Chat() {
                 </div>
               </div>
             </div>
-            <div className="h-[75%] bg-green-300 flex flex-col gap-2 px-3 py-2 overflow-y-scroll">
+            <div
+              ref={messageContainerRef}
+              onScroll={(e) => {
+                const div = e.currentTarget;
+                if (div.scrollTop === 0 && chatState.hasMoreMessages) {
+                  const oldHeight = div.scrollHeight;
+                  dispatch(
+                    findMessagesByChatId({
+                      id: chatState.selectedChat!,
+                      page: chatState.currentPage + 1,
+                      limit: chatState.numberOfMessagesLimit,
+                    }),
+                  );
+                  dispatch(setCurrentPage(chatState.currentPage + 1));
+
+                  const newHeight = div.scrollHeight;
+                  div.scrollTop = newHeight - oldHeight;
+                }
+              }}
+              className="h-[75%] bg-green-300 flex flex-col gap-2 px-3 py-2 overflow-y-scroll"
+            >
               {component}
               <div ref={messagesEndRef} />
             </div>

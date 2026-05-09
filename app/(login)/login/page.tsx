@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useAppDispatch, useAppSelector } from "@/app/_redux/store";
 import { createUser } from "@/app/_redux/userSlice";
+import { useRouter } from "next/navigation";
 
 export default function Login() {
   const [isSignUp, setIsSignUp] = useState(true);
@@ -14,6 +15,8 @@ export default function Login() {
 
   const dispatch = useAppDispatch();
 
+  const router = useRouter()
+
   const login = async () => {
     const res = await signIn("credentials", {
       username,
@@ -22,7 +25,7 @@ export default function Login() {
     });
 
     if (res?.ok) {
-      window.location.href = "/";
+      router.replace("/");
     } else {
       alert("Credenziali non valide");
     }

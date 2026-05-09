@@ -50,7 +50,7 @@ const userSlice = createSlice({
   reducers: {},
   extraReducers(builder) {
     builder.addCase(findAllUsers.fulfilled, (state, action) => {
-      state.findAllUsersResponse = action.payload;
+      state.findAllUsersResponse = action.payload.data;
       state.findAllUsersStatus = "success";
     });
     builder.addCase(findAllUsers.rejected, (state) => {
@@ -60,7 +60,7 @@ const userSlice = createSlice({
       state.findAllUsersStatus = "loading";
     });
     builder.addCase(findUserById.fulfilled, (state, action) => {
-      state.findUserByIdResponse = action.payload;
+      state.findUserByIdResponse = action.payload as User;
       state.findUserByIdStatus = "success";
     });
     builder.addCase(findUserById.rejected, (state) => {
@@ -69,7 +69,7 @@ const userSlice = createSlice({
     builder.addCase(findUserById.pending, (state) => {
       state.findUserByIdStatus = "loading";
     });
-    builder.addCase(createUser.fulfilled, (state, action) => {
+    builder.addCase(createUser.fulfilled, (state) => {
       state.createUserStatus = "success";
     });
     builder.addCase(createUser.rejected, (state) => {

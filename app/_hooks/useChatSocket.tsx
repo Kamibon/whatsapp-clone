@@ -1,7 +1,7 @@
 import { SetStateAction, useEffect, useState } from "react";
 import { DefaultEventsMap } from "socket.io";
 import { io, Socket } from "socket.io-client";
-import { addMessageToChat, findMessagesByChatId } from "../_redux/chatSlice";
+import { addMessageToChat, findMessagesByChatId, setCurrentPage, setFindMessagesResponse } from "../_redux/chatSlice";
 import { useAppDispatch, useAppSelector } from "../_redux/store";
 import { MessageType } from "../types/interfaces";
 
@@ -64,7 +64,9 @@ export const useChatSocket = (
         }),
       );
       setTimeout(() => {
-        dispatch(findMessagesByChatId(chatState.selectedChat!));
+        dispatch(setFindMessagesResponse([]))
+        dispatch(findMessagesByChatId({id:chatState.selectedChat!, page: 1, limit: chatState.numberOfMessagesLimit}));
+        dispatch(setCurrentPage(1))
       }, 500);
       setInput("");
     } catch (error) {

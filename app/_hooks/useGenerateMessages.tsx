@@ -11,6 +11,8 @@ export const useGenerateMessages = (
 ) => {
   const { userId } = useAuth();
 
+  const temp = messages.slice()
+
   const component: ReactNode = currentChat ? (
     <>
       {!messages.length && (
@@ -18,7 +20,7 @@ export const useGenerateMessages = (
           Inizia una conversazione
         </div>
       )}
-      {messages.map((item, index) => (
+      {temp.map((item, index) => (
         <React.Fragment key={item.id}>
           {((messages[index - 1] &&
             isDifferentDay(

@@ -6,7 +6,7 @@ import {
   CreateChatRequest,
   CreateMessageRequest,
   MessageType,
-  PromiseStatus,
+  PromiseStatus
 } from "../types/interfaces";
 import { create, findAll, findById } from "./service";
 
@@ -19,6 +19,15 @@ interface State {
   addMessageToChatStatus: PromiseStatus;
   findMessagesByChatResponse: MessageType[];
   findMessagesByChatStatus: PromiseStatus;
+  currentPage: number
+  numberOfMessagesLimit: number
+   hasMoreMessages: boolean;
+}
+
+interface FindMessagesParams {
+  id: string;
+  page: number;
+  limit: number;
 }
 
 const initialState: State = {
@@ -29,6 +38,9 @@ const initialState: State = {
   addMessageToChatStatus: "idle",
   findMessagesByChatResponse: [],
   findMessagesByChatStatus: "idle",
+  currentPage: 1,
+  numberOfMessagesLimit: 20,
+  hasMoreMessages: true
 };
 
 const url = "/api/chats";
@@ -49,8 +61,8 @@ export const createChat = createAsyncThunk(
 
 export const findMessagesByChatId = createAsyncThunk(
   "chat/findMessages",
-  async (id: string) => {
-    return findById<MessageType[]>(url + "/messages/", id);
+  async ({ id, page, limit }: FindMessagesParams) => {
+    return findById<MessageType>(url + "/messages/", id, page, limit);
   },
 );
 
@@ -71,14 +83,24 @@ export const chatSlice = createSlice({
   reducers: {
     setSelectedChat: (state, action) => {
       state.selectedChat = action.payload;
+      state.findMessagesByChatResponse = []
+    },
+    setFindMessagesResponse: (state, action) => {
+        state.findMessagesByChatResponse = action.payload;
     },
     setCreateChatStatus: (state, action) => {
       state.createChatStatus = action.payload;
     },
+    setCurrentPage: (state, action) => {
+      state.currentPage = action.payload;
+    },
+    setLimit: (state, action) => {
+      state.numberOfMessagesLimit = action.payload;
+    }
   },
   extraReducers(builder) {
     builder.addCase(findAllChats.fulfilled, (state, action) => {
-      state.findAllChatsResponse = action.payload;
+      state.findAllChatsResponse = [...action.payload.data, ...state.findAllChatsResponse];
       state.findAllChatsStatus = "success";
     });
     builder.addCase(findAllChats.pending, (state) => {
@@ -107,7 +129,9 @@ export const chatSlice = createSlice({
       state.addMessageToChatStatus = "failed";
     });
     builder.addCase(findMessagesByChatId.fulfilled, (state, action) => {
-      state.findMessagesByChatResponse = action.payload;
+      const messages = action.payload.data as MessageType[]
+      state.findMessagesByChatResponse = [...messages.reverse() , ...state.findMessagesByChatResponse];
+      state.hasMoreMessages = messages.length === state.numberOfMessagesLimit;
       state.findMessagesByChatStatus = "success";
     });
     builder.addCase(findMessagesByChatId.pending, (state) => {
@@ -119,5 +143,5 @@ export const chatSlice = createSlice({
   },
 });
 
-export const { setCreateChatStatus, setSelectedChat } = chatSlice.actions;
+export const { setCreateChatStatus, setSelectedChat, setCurrentPage, setLimit, setFindMessagesResponse } = chatSlice.actions;
 export default chatSlice.reducer;

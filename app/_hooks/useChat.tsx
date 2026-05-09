@@ -1,28 +1,25 @@
-import { useSession } from "next-auth/react";
-import { useRef, useMemo, useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../_redux/store";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  setSelectedChat,
-  setCreateChatStatus,
   findAllChats,
   findMessagesByChatId,
+  setCreateChatStatus,
+  setCurrentPage,
+  setSelectedChat,
 } from "../_redux/chatSlice";
+import { useAppDispatch, useAppSelector } from "../_redux/store";
 import { findAllUsers } from "../_redux/userSlice";
-import { useRouter } from "next/navigation";
 import { MessageType } from "../types/interfaces";
 import { useAuth } from "./useAuth";
 
 export const useChat = () => {
   const messagesEndRef = useRef(null);
+  const messageContainerRef = useRef(null)
 
-  
   const dispatch = useAppDispatch();
 
-  const {session, userId} = useAuth()
+  const { userId } = useAuth();
 
   const [messages, setMessages] = useState<MessageType[]>([]);
-
-  const router = useRouter();
 
   const userState = useAppSelector((state) => state.user);
   const chatState = useAppSelector((state) => state.chat);
@@ -60,13 +57,20 @@ export const useChat = () => {
   }, [chatState.createChatResponse, chatState.createChatStatus]);
 
   useEffect(() => {
-    if (session.status === "unauthenticated") router.replace("/login");
-    if (session.data?.user?.id.trim()) dispatch(findAllChats(userId));
-  }, [session]);
+    if (userId) dispatch(findAllChats(userId));
+  }, [userId]);
 
   useEffect(() => {
-    if (chatState.selectedChat)
-      dispatch(findMessagesByChatId(chatState.selectedChat));
+    dispatch(setCurrentPage(1));
+    if (chatState.selectedChat) {
+      dispatch(
+        findMessagesByChatId({
+          id: chatState.selectedChat!,
+          page: 1,
+          limit: chatState.numberOfMessagesLimit,
+        }),
+      );
+    }
   }, [chatState.selectedChat]);
 
   useEffect(() => {
@@ -77,7 +81,7 @@ export const useChat = () => {
   }, [chatState.findMessagesByChatStatus]);
 
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (messagesEndRef.current && chatState.currentPage === 1) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
@@ -89,6 +93,7 @@ export const useChat = () => {
     currentChat,
     userState,
     chatState,
+    messageContainerRef,
     messagesEndRef,
   };
 };
