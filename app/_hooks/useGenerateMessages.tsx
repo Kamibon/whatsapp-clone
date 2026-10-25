@@ -28,7 +28,7 @@ export const useGenerateMessages = (
               new Date(messages[index].createdAt),
             )) ||
             !messages[index - 1]) && (
-            <div className="  flex items-center justify-center">
+            <div className="flex items-center justify-center">
               <div className="rounded-xl bg-blue-300 text-center px-1 py-2 text-blue-500">
                 {new Date(messages[index].createdAt).toLocaleDateString(
                   "it-IT",
@@ -39,6 +39,7 @@ export const useGenerateMessages = (
           <Message
             fromSender={item.senderId !== userId}
             text={item.content}
+            senderName={(item.senderId === userId || currentChat.type === 'PRIVATE')? undefined : currentChat.participants.find(element => element.user.id === item.senderId)?.user.username}
             sentAtTime={`${new Date(item.createdAt).getHours().toString()}: 
                         ${new Date(item.createdAt).getMinutes().toString().padStart(2, "0")} `}
             seen={item.readReceipts.some(

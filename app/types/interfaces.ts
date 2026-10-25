@@ -1,14 +1,18 @@
+import { DefaultSession } from "next-auth";
+
 export interface User {
   id: string;
   username: string;
   password: string;
   displayName: string;
   phoneNumber: string;
-  avatarUrl?: string;
+  avatarUrl: string | null;
   createdAt: Date;
 }
 
 export type CreateUserRequest = Omit<User, "id" | "createdAt">;
+
+export type UserResponse = Omit<User, "password">;
 
 export interface MessageType {
   id: string;
@@ -36,7 +40,8 @@ export interface Attachment {
 
 export interface Chat {
   id: string;
-  type: "private" | "group";
+  name?: string
+  type: "PRIVATE" | "GROUP";
   createdAt: Date;
   updatedAt: Date;
   participants: Participant[];
@@ -44,13 +49,13 @@ export interface Chat {
 }
 
 export interface CreateChatRequest {
-  userId1: string;
-  userId2: string;
+  participants: string[];
+  name?: string
 }
 
 export interface ChatCreatedResponse {
-  message: string,
-  chat: Chat
+  message: string;
+  chat: Chat;
 }
 
 export interface Participant {
@@ -81,4 +86,12 @@ export interface PaginatedResponse<T> {
   hasMore: boolean;
   page: number;
   limit: number;
+}
+
+export interface ParamsWithId {
+  params: Promise<{ id: string }>;
+}
+
+export interface DefaultSessionWithId extends DefaultSession {
+  id: number;
 }

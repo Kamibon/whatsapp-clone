@@ -3,6 +3,7 @@ import Avatar from "./avatar";
 import { clipWords } from "../lib/utils";
 
 interface Props {
+  chatName?: string
   contactName: string;
   lastMessage?: string;
   lastMessageDate?: string;
@@ -10,7 +11,7 @@ interface Props {
 }
 
 export const ChatListElement = (props: Props) => {
-  const { contactName, lastMessage, lastMessageDate, onClick } = props;
+  const { chatName, contactName, lastMessage, lastMessageDate, onClick } = props;
   return (
     <div
       onClick={onClick}
@@ -19,7 +20,7 @@ export const ChatListElement = (props: Props) => {
       <Avatar size="sm" />
       <div className="flex justify-between grow">
         <div className=" flex flex-col  gap-1 pl-2">
-          <span className="font-semibold">{contactName}</span>
+          <span className="font-semibold">{chatName ?? contactName}</span>
           <span className=" text-gray-500 text-sm hidden md:block">
             {clipWords(lastMessage, 25)}
           </span>

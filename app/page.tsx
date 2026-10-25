@@ -59,14 +59,14 @@ export default function Chat() {
             />
           )}
           {newChat &&
-            userState.findAllUsersResponse
+           Array.from(new Set(userState.findAllUsersResponse))
               .filter((user) =>
                 user.username.toLowerCase().includes(filter.toLowerCase()),
               )
               .map((item) => (
                 <ChatListElement
                   onClick={() => {
-                    dispatch(createChat({ userId1: userId, userId2: item.id }));
+                    dispatch(createChat({ participants: [userId, item.id] }));
                     setNewChat(false);
                     socket?.emit("joinRoom", item.id);
                   }}
@@ -84,6 +84,7 @@ export default function Chat() {
                   dispatch(setSelectedChat(item.id));
                   socket?.emit("joinRoom", item.id);
                 }}
+                chatName={item.name}
                 contactName={
                   item.participants.find((elem) => elem.userId !== userId)!.user
                     .username
@@ -114,14 +115,20 @@ export default function Chat() {
             <div className="h-[15%] bg-gray-400 flex items-center px-4">
               <Avatar size="md" />
               <div className="grow flex items-center justify-between pl-2">
-                <div className="flex flex-col  gap-1">
+                <div className="flex flex-col  gap-0.5">
                   <span className="font-semibold">
-                    {
+                    {currentChat?.name ??
                       currentChat?.participants.find(
                         (elem) => elem.userId !== userId,
-                      )!.user.username
-                    }
+                      )!.user.username}
                   </span>
+                  {currentChat?.type === "GROUP" && (
+                    <span className="text-xs">
+                      {currentChat.participants.map(
+                        (item) => item.user.username,
+                      ).join(' , ')}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 ">
                   <Paperclip />
