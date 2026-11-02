@@ -1,9 +1,11 @@
-import NextAuth from "next-auth";
+import NextAuth, { Session } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcrypt";
 import { prisma } from "@/app/lib/prisma";
 import { randomUUID, randomBytes } from "crypto";
+import { User } from "@/app/types/interfaces";
+import { encode, JWT } from "next-auth/jwt";
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
@@ -52,7 +54,7 @@ export const authOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: JWT; user: User }) {
       if (user) {
         token.id = user.id;
         token.username = user.username;
@@ -60,13 +62,17 @@ export const authOptions = {
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: Session; token: JWT }) {
       if (token) {
         session.user = {
           id: token.id,
           username: token.username,
           phoneNumber: token.phoneNumber,
         };
+        session.accessToken = await encode({
+          token,
+          secret: process.env.NEXTAUTH_SECRET!,
+        });
       }
       return session;
     },

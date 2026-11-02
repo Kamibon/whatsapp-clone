@@ -20,7 +20,11 @@ const initialState: State = {
 const url = "/api/users";
 
 export const findAllUsers = createAsyncThunk("user/findAll", async () => {
-  return findAll<User>(url);
+  const response = await findAll<User>(url);
+
+  console.log("Risposta API findAllUsers:", response.data);
+
+  return response;
 });
 
 export const findUserById = createAsyncThunk(

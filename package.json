@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "socket": "ts-node app/_server/server.ts",
+    "socket": "tsx app/_server/server.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -19,7 +19,7 @@
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
-    "emoji-picker-react": "^4.18.0",
+    "emoji-picker-react": "^4.22.3",
     "express": "^5.2.1",
     "ioredis": "^5.9.3",
     "next": "16.1.6",
@@ -47,6 +47,7 @@
     "prisma": "^7.4.0",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

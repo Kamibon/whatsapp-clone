@@ -1,14 +1,11 @@
 import { prisma } from "@/app/lib/prisma";
 import redis from "@/app/lib/redis";
 import { withMetrics } from "@/app/lib/withMetrics";
-
-interface ParamsProps {
-  params: { id: string };
-}
+import { ParamsWithId } from "@/app/types/interfaces";
 
 const findMessagesByChatId = async (
   request: Request,
-  { params }: ParamsProps,
+  { params }: ParamsWithId,
 ) => {
   const { id } = await params;
 
@@ -63,7 +60,7 @@ const findMessagesByChatId = async (
   });
 };
 
-const addMessageToChat = async (request: Request, { params }: ParamsProps) => {
+const addMessageToChat = async (request: Request, { params }: ParamsWithId) => {
   const { id } = await params;
 
   const body = await request.json();
@@ -79,7 +76,7 @@ const addMessageToChat = async (request: Request, { params }: ParamsProps) => {
 
     return Response.json(newMessage);
   } catch (error) {
-    return Response.json(error.message, { status: 500 });
+    return Response.json({error}, { status: 500 });
   }
 };
 

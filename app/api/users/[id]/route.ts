@@ -1,21 +1,24 @@
 import { prisma } from "@/app/lib/prisma";
 import { withMetrics } from "@/app/lib/withMetrics";
+import { ParamsWithId } from "@/app/types/interfaces";
 
-const findUserById = async (req: Request, { params }) => {
+const findUserById = async (req: Request,  { params }: ParamsWithId) => {
   const { id } = await params;
 
   const user = await prisma.user.findUnique({ where: { id: id } });
 
-  if (!user) Response.json("User not found", { status: 404 });
+  if (!user) return Response.json("User not found", { status: 404 });
 
-  return Response.json(user);
+  const { password, ...userResponse } = user;
+
+  return Response.json(userResponse);
 };
 
-const deleteUser = async (req: Request, { params }) => {
+const deleteUser = async (req: Request, { params }: ParamsWithId) => {
   const { id } = await params;
   const user = await prisma.user.findUnique({ where: { id: id } });
 
-  if (!user) Response.json("User not found", { status: 404 });
+  if (!user) return Response.json("User not found", { status: 404 });
 
   try {
     await prisma.user.delete({ where: { id: id } });
@@ -26,7 +29,7 @@ const deleteUser = async (req: Request, { params }) => {
   return Response.json("User deleted", { status: 200 });
 };
 
-const editUser = async (req: Request, { params }) => {
+const editUser = async (req: Request, { params }: ParamsWithId) => {
   const { id } = await params;
   const user = await prisma.user.findUnique({ where: { id: id } });
   const body = await req.json();
@@ -36,7 +39,7 @@ const editUser = async (req: Request, { params }) => {
   try {
     await prisma.user.update({ where: { id: id }, data: body });
   } catch (error) {
-    return Response.json("Failed to delete", { status: 500 });
+    return Response.json("Failed to update", { status: 500 });
   }
 };
 

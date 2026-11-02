@@ -1,5 +1,6 @@
 import { prisma } from "@/app/lib/prisma";
 import { withMetrics } from "@/app/lib/withMetrics";
+import { UserMapper } from "@/app/mappers/userMapper";
 import bcrypt from "bcrypt";
 
 export const dynamic = "force-dynamic";
@@ -7,7 +8,7 @@ export const dynamic = "force-dynamic";
 const findAllUsers = async (req: Request) => {
   const users = await prisma.user.findMany();
 
-  return Response.json(users);
+  return Response.json((users.map(item => UserMapper.toResponse(item))));
 };
 
 const createUser = async (req: Request) => {
@@ -26,7 +27,7 @@ const createUser = async (req: Request) => {
       },
     });
   } catch (error) {
-    return Response.json({ error: error!.message }, { status: 500 });
+    return Response.json({ error }, { status: 500 });
   }
   return Response.json("User created", { status: 201 });
 };

@@ -1,7 +1,8 @@
 import { prisma } from "@/app/lib/prisma";
 import { withMetrics } from "@/app/lib/withMetrics";
+import { ParamsWithId } from "@/app/types/interfaces";
 
-const findAllChatsByUserId = async (req: Request, { params }) => {
+const findAllChatsByUserId = async (req: Request, { params }: ParamsWithId) => {
   const { id } = await params;
 
   const chats = await prisma.chat.findMany({
@@ -19,7 +20,7 @@ const findAllChatsByUserId = async (req: Request, { params }) => {
       },
       participants: {
         include: { user: true },
-      },
+      }
     },
     orderBy: {
       updatedAt: "desc",

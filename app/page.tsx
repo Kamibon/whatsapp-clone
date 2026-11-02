@@ -26,7 +26,11 @@ import { SendIcon } from "./_icons/send";
 export default function Chat() {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [newChat, setNewChat] = useState(false);
+  const [newGroupChat, setNewGroupChat] = useState(false);
+  const [newGroupMembers, setNewGroupMembers] = useState<string[]>([]);
   const [filter, setFilter] = useState("");
+
+  const [showChatOnMobile, setShowChatOnMobile] = useState(false);
 
   const {
     dispatch,
@@ -39,153 +43,270 @@ export default function Chat() {
     messagesEndRef,
   } = useChat();
   const { userId } = useAuth();
-  const { input, send, setInput, socket } = useChatSocket(userId, setMessages);
+  const { input, send, setInput, socket } = useChatSocket( setMessages);
   const { component } = useGenerateMessages(messages, currentChat!);
 
   return (
-    <div className="min-h-screen mt-[-25%] sm:mt-[-8%] flex justify-center fixed px-4 w-full z-20">
-      <div className=" h-150 flex flex-row z-20 w-full">
-        <div className="bg-white w-[40%] relative">
-          <div className="h-[15%] bg-gray-300 flex items-center justify-between px-4">
+    <div className="h-[calc(100dvh-10rem)] min-h-[400px] w-full px-2 pb-2 sm:px-4 sm:pb-4">
+      <div className="mx-auto flex h-full w-full max-w-7xl overflow-hidden rounded-xl shadow-xl">
+        {/* Lista chat */}
+        <aside
+          className={`
+        h-full w-full flex-col bg-white
+        md:flex md:w-[360px] md:shrink-0
+        ${showChatOnMobile ? "hidden" : "flex"}
+      `}
+        >
+          <div className="flex h-16 shrink-0 items-center justify-between bg-gray-300 px-4">
             <Avatar size="md" />
             <button>
               <Logout />
             </button>
           </div>
+
           {newChat && (
-            <Searchbar
-              placeholder="Cerca tra gli utenti"
-              onChangeText={(text) => setFilter(text)}
-            />
-          )}
-          {newChat &&
-            userState.findAllUsersResponse
-              .filter((user) =>
-                user.username.toLowerCase().includes(filter.toLowerCase()),
-              )
-              .map((item) => (
-                <ChatListElement
-                  onClick={() => {
-                    dispatch(createChat({ userId1: userId, userId2: item.id }));
-                    setNewChat(false);
-                    socket?.emit("joinRoom", item.id);
-                  }}
-                  contactName={
-                    userState.findAllUsersResponse.find((i) => i.id === item.id)
-                      ?.username ?? ""
-                  }
-                  key={item.id}
-                />
-              ))}
-          {!newChat &&
-            chatState.findAllChatsResponse.map((item) => (
-              <ChatListElement
-                onClick={() => {
-                  dispatch(setSelectedChat(item.id));
-                  socket?.emit("joinRoom", item.id);
-                }}
-                contactName={
-                  item.participants.find((elem) => elem.userId !== userId)!.user
-                    .username
-                }
-                lastMessage={
-                  item.messages.length > 0 ? item.messages[0].content : ""
-                }
-                lastMessageDate={
-                  item.messages.length > 0
-                    ? new Date(item.messages[0].createdAt).toLocaleTimeString(
-                        [],
-                        { hour: "2-digit", minute: "2-digit" },
-                      )
-                    : ""
-                }
-                key={item.id}
+            <div className="shrink-0">
+              <Searchbar
+                placeholder="Cerca tra gli utenti"
+                onChangeText={(text) => setFilter(text)}
               />
-            ))}
+            </div>
+          )}
+
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {newChat ? (
+              <>
+                {Array.from(
+                  new Map(
+                    userState.findAllUsersResponse.map((user) => [
+                      user.id,
+                      user,
+                    ]),
+                  ).values(),
+                )
+                  .filter((user) =>
+                    user.username.toLowerCase().includes(filter.toLowerCase()),
+                  )
+                  .map((item) => (
+                    <ChatListElement
+                      key={item.id}
+                      onClick={() => {
+                        if (!newGroupChat) {
+                          dispatch(
+                            createChat({
+                              participants: [userId, item.id],
+                            }),
+                          );
+                          setNewChat(false);
+                          socket?.emit("joinRoom", item.id);
+                        } else {
+                          setNewGroupMembers((prev) =>
+                            prev.includes(item.id)
+                              ? prev.filter((id) => id !== item.id)
+                              : [...prev, item.id],
+                          );
+                        }
+                      }}
+                      contactName={item.username}
+                      selected={newGroupMembers.includes(item.id)}
+                    />
+                  ))}
+
+                {!newGroupChat && (
+                  <button
+                    onClick={() => setNewGroupChat(true)}
+                    className="w-full cursor-pointer p-3 font-semibold hover:bg-gray-100"
+                  >
+                    Crea chat di gruppo
+                  </button>
+                )}
+
+                {newGroupMembers.length > 0 && (
+                  <button
+                    onClick={() => {
+                      const groupName = window.prompt("Nome del gruppo:");
+                      if (!groupName) return;
+
+                      dispatch(
+                        createChat({
+                          name: groupName,
+                          participants: [...newGroupMembers, userId],
+                        }),
+                      );
+                      setNewGroupChat(false);
+                      setNewGroupMembers([]);
+                      setNewChat(false);
+                    }}
+                    className="w-full cursor-pointer p-3 font-semibold hover:bg-gray-100"
+                  >
+                    Crea gruppo
+                  </button>
+                )}
+              </>
+            ) : (
+              Array.from(
+                new Map(
+                  chatState.findAllChatsResponse.map((chat) => [chat.id, chat]),
+                ).values(),
+              ).map((item) => (
+                <ChatListElement
+                  key={item.id}
+                  onClick={() => {
+                    dispatch(setSelectedChat(item.id));
+                    socket?.emit("joinRoom", item.id);
+                    setShowChatOnMobile(true);
+                  }}
+                  chatName={item.name}
+                  contactName={
+                    item.name ??
+                    item.participants.find((elem) => elem.userId !== userId)!
+                      .user.username
+                  }
+                  lastMessage={
+                    item.messages.length > 0 ? item.messages[0].content : ""
+                  }
+                  lastMessageDate={
+                    item.messages.length > 0
+                      ? new Date(item.messages[0].createdAt).toLocaleTimeString(
+                          [],
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )
+                      : ""
+                  }
+                />
+              ))
+            )}
+          </div>
+
           <button
             onClick={() => setNewChat((prev) => !prev)}
-            className="size-12 cursor-pointer hover:bg-green-600 bg-green-700 flex items-center justify-center rounded-full absolute bottom-4 right-4"
+            aria-label={newChat ? "Chiudi nuova chat" : "Nuova chat"}
+            className="absolute bottom-5 right-5 z-10 flex size-12 cursor-pointer items-center justify-center rounded-full bg-green-700 text-white shadow-lg hover:bg-green-600 md:bottom-6  md:right-auto"
           >
             <MessageIcon />
           </button>
-        </div>
-        {chatState.selectedChat && (
-          <div className="bg-gray-500 w-[60%]">
-            <div className="h-[15%] bg-gray-400 flex items-center px-4">
-              <Avatar size="md" />
-              <div className="grow flex items-center justify-between pl-2">
-                <div className="flex flex-col  gap-1">
-                  <span className="font-semibold">
-                    {
+        </aside>
+
+        {/* Conversazione */}
+        <section
+          className={`
+        h-full min-w-0 flex-1 flex-col bg-gray-500
+        ${showChatOnMobile ? "flex" : "hidden"}
+        md:flex
+      `}
+        >
+          {chatState.selectedChat ? (
+            <>
+              <div className="flex min-h-16 shrink-0 items-center gap-2 bg-gray-400 px-3 sm:px-4">
+                <button
+                  type="button"
+                  onClick={() => setShowChatOnMobile(false)}
+                  className="mr-1 cursor-pointer md:hidden"
+                  aria-label="Torna alle chat"
+                >
+                  ←
+                </button>
+
+                <Avatar size="md" />
+
+                <div className="min-w-0 flex-1 pl-1">
+                  <div className="truncate font-semibold">
+                    {currentChat?.name ??
                       currentChat?.participants.find(
                         (elem) => elem.userId !== userId,
-                      )!.user.username
-                    }
-                  </span>
+                      )?.user.username}
+                  </div>
+
+                  {currentChat?.type === "GROUP" && (
+                    <div className="truncate text-xs">
+                      {currentChat.participants
+                        .map((item) => item.user.username)
+                        .join(", ")}
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center gap-3 ">
+
+                <div className="flex shrink-0 items-center gap-3">
                   <Paperclip />
                   <MenuIcon />
                 </div>
               </div>
-            </div>
-            <div
-              ref={messageContainerRef}
-              onScroll={(e) => {
-                const div = e.currentTarget;
-                if (div.scrollTop === 0 && chatState.hasMoreMessages) {
-                  const oldHeight = div.scrollHeight;
-                  dispatch(
-                    findMessagesByChatId({
-                      id: chatState.selectedChat!,
-                      page: chatState.currentPage + 1,
-                      limit: chatState.numberOfMessagesLimit,
-                    }),
-                  );
-                  dispatch(setCurrentPage(chatState.currentPage + 1));
 
-                  const newHeight = div.scrollHeight;
-                  div.scrollTop = newHeight - oldHeight;
-                }
-              }}
-              className="h-[75%] bg-green-300 flex flex-col gap-2 px-3 py-2 overflow-y-scroll"
-            >
-              {component}
-              <div ref={messagesEndRef} />
-            </div>
-            <div className="h-[10%] bg-gray-200 flex items-center gap-2 overflow-x-scroll  px-2 relative">
-              {isPickerOpen && (
-                <div className="absolute bottom-full left-0 z-10">
-                  <EmojiPicker
-                    onEmojiClick={(e) => setInput(input.concat(e.emoji))}
-                  />
-                </div>
-              )}
-              <div onClick={() => setIsPickerOpen((prev) => !prev)}>
-                <Smile />
+              <div
+                ref={messageContainerRef}
+                onScroll={(e) => {
+                  const div = e.currentTarget;
+
+                  if (div.scrollTop === 0 && chatState.hasMoreMessages) {
+                    dispatch(
+                      findMessagesByChatId({
+                        id: chatState.selectedChat!,
+                        page: chatState.currentPage + 1,
+                        limit: chatState.numberOfMessagesLimit,
+                      }),
+                    );
+                    dispatch(setCurrentPage(chatState.currentPage + 1));
+                  }
+                }}
+                className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto bg-green-300 px-3 py-3"
+              >
+                {component}
+                <div ref={messagesEndRef} />
               </div>
 
-              <input
-                value={input}
-                onSubmit={() => send()}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") send();
-                }}
-                onChange={(e) => setInput(e.target.value)}
-                className="grow bg-white font-thin h-[75%] px-3 rounded-2xl text-gray-500"
-              />
-              <button className="ml-[-18%] sm:ml-0" onClick={() => send()}>
-                <SendIcon />
-              </button>
-              <Microphone />
+              <div className="relative flex min-h-16 shrink-0 items-center gap-2 bg-gray-200 px-2 py-2 sm:px-4">
+                {isPickerOpen && (
+                  <div className="absolute bottom-full left-0 z-20 max-w-full">
+                    <EmojiPicker
+                      onEmojiClick={(e) =>
+                        setInput((prev) => prev.concat(e.emoji))
+                      }
+                    />
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setIsPickerOpen((prev) => !prev)}
+                  aria-label="Apri emoji"
+                  className="shrink-0"
+                >
+                  <Smile />
+                </button>
+
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") send();
+                  }}
+                  placeholder="Scrivi un messaggio..."
+                  className="h-10 min-w-0 flex-1 rounded-2xl bg-white px-3 text-gray-700 outline-none"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => send()}
+                  aria-label="Invia messaggio"
+                  className="shrink-0"
+                >
+                  <SendIcon />
+                </button>
+
+                <div className="shrink-0">
+                  <Microphone />
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex min-h-0 flex-1 items-center justify-center p-4 text-center">
+              <span>Inizia una conversazione</span>
             </div>
-          </div>
-        )}
-        {!chatState.selectedChat && (
-          <div className="bg-gray-500 flex items-center justify-center w-[60%]">
-            <span>Inizia una conversazione</span>
-          </div>
-        )}
+          )}
+        </section>
       </div>
     </div>
   );

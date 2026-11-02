@@ -1,12 +1,17 @@
 import { SetStateAction, useEffect, useState } from "react";
 import { DefaultEventsMap } from "socket.io";
 import { io, Socket } from "socket.io-client";
-import { addMessageToChat, findMessagesByChatId, setCurrentPage, setFindMessagesResponse } from "../_redux/chatSlice";
+import {
+  addMessageToChat,
+  findMessagesByChatId,
+  setCurrentPage,
+  setFindMessagesResponse,
+} from "../_redux/chatSlice";
 import { useAppDispatch, useAppSelector } from "../_redux/store";
 import { MessageType } from "../types/interfaces";
+import { useAuth } from "./useAuth";
 
 export const useChatSocket = (
-  userId: string,
   setMessages: (args: SetStateAction<MessageType[]>) => void,
 ) => {
   const [input, setInput] = useState("");
@@ -20,14 +25,19 @@ export const useChatSocket = (
 
   const chatState = useAppSelector((state) => state.chat);
 
+  const serverUrl = process.env.SERVER_URL ?? "http://localhost:3001";
+
+  const { userId, accessToken } = useAuth();
+
   useEffect(() => {
+    if(!userId || !accessToken) return
     try {
-      const socketInstance = io("http://localhost:3001", {
+      const socketInstance = io(serverUrl, {
         reconnectionAttempts: 5,
         reconnectionDelay: 1000,
         transports: ["websocket"],
         auth: {
-          userId,
+          token: accessToken,
         },
       });
 
@@ -44,7 +54,7 @@ export const useChatSocket = (
     } catch (error) {
       console.log(error);
     }
-  }, [chatState.selectedChat]);
+  }, [userId, accessToken]);
 
   const send = () => {
     if (!socket) return;
@@ -64,13 +74,19 @@ export const useChatSocket = (
         }),
       );
       setTimeout(() => {
-        dispatch(setFindMessagesResponse([]))
-        dispatch(findMessagesByChatId({id:chatState.selectedChat!, page: 1, limit: chatState.numberOfMessagesLimit}));
-        dispatch(setCurrentPage(1))
+        dispatch(setFindMessagesResponse([]));
+        dispatch(
+          findMessagesByChatId({
+            id: chatState.selectedChat!,
+            page: 1,
+            limit: chatState.numberOfMessagesLimit,
+          }),
+        );
+        dispatch(setCurrentPage(1));
       }, 500);
       setInput("");
     } catch (error) {
-      alert("Could not send message:" + error.message);
+      alert("Could not send message");
     }
   };
 

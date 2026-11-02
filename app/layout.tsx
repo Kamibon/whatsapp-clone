@@ -15,10 +15,11 @@ export default function RootLayout({
   return (
     <AppWrapper>
       <html lang="en">
-        <body className={`antialiased bg-gray-300 min-h-screen`}>
-          <div className="w-full bg-green-800 h-40">
-            <span className=" ml-1 mt-4 text-white">🅰 Athsapp</span>
-          </div>
+        <body className="antialiased bg-gray-300 min-h-screen">
+          <header className="w-full h-40 bg-green-800 px-4 py-5">
+            <span className="text-white">🅰 Athsapp</span>
+          </header>
+
           {children}
         </body>
       </html>
