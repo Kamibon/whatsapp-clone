@@ -12,7 +12,7 @@ import { MessageType } from "../types/interfaces";
 import { useAuth } from "./useAuth";
 
 export const useChat = () => {
-  const messagesEndRef = useRef(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const messageContainerRef = useRef(null)
 
   const dispatch = useAppDispatch();
@@ -31,16 +31,6 @@ export const useChat = () => {
         )
       : null;
   }, [chatState.selectedChat, chatState.findAllChatsResponse]);
-
-  useEffect(() => {
-    if (
-      chatState.createChatStatus === "success" &&
-      chatState.createChatResponse
-    ) {
-      dispatch(setSelectedChat(chatState.createChatResponse.id));
-      dispatch(setCreateChatStatus("idle"));
-    }
-  }, [chatState.createChatResponse, chatState.createChatStatus]);
 
   useEffect(() => {
     dispatch(findAllUsers());

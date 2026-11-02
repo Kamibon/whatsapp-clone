@@ -3,15 +3,17 @@ import Avatar from "./avatar";
 import { clipWords } from "../lib/utils";
 
 interface Props {
-  chatName?: string
+  chatName?: string;
   contactName: string;
   lastMessage?: string;
   lastMessageDate?: string;
   onClick: () => void;
+  selected?: boolean;
 }
 
 export const ChatListElement = (props: Props) => {
-  const { chatName, contactName, lastMessage, lastMessageDate, onClick } = props;
+  const { chatName, contactName, lastMessage, lastMessageDate, onClick, selected } =
+    props;
   return (
     <div
       onClick={onClick}
@@ -28,6 +30,11 @@ export const ChatListElement = (props: Props) => {
         <span className=" text-sm text-gray-400 hidden lg:block">
           {lastMessageDate}
         </span>
+        { selected &&
+          <div className="bg-green-500 flex items-center justify-center p-3 rounded-full size-2">
+            <span className="text-white">V</span>
+          </div>
+        }
       </div>
     </div>
   );

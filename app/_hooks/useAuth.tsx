@@ -9,9 +9,11 @@ export const useAuth = () => {
 
   const userId = session.data?.user.id || null;
 
+  const accessToken = session.data?.accessToken || null;
+
   useEffect(() => {
     if (session.status === "unauthenticated") router.replace("/login");
   }, [session]);
 
-  return { session, userId };
+  return { session, userId, accessToken };
 };

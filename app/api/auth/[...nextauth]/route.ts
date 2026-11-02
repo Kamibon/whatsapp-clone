@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import { prisma } from "@/app/lib/prisma";
 import { randomUUID, randomBytes } from "crypto";
 import { User } from "@/app/types/interfaces";
-import { JWT } from "next-auth/jwt";
+import { encode, JWT } from "next-auth/jwt";
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
@@ -62,19 +62,17 @@ export const authOptions = {
       }
       return token;
     },
-    async session({
-      session,
-      token,
-    }: {
-      session: Session;
-      token: JWT;
-    }) {
+    async session({ session, token }: { session: Session; token: JWT }) {
       if (token) {
         session.user = {
           id: token.id,
           username: token.username,
           phoneNumber: token.phoneNumber,
         };
+        session.accessToken = await encode({
+          token,
+          secret: process.env.NEXTAUTH_SECRET!,
+        });
       }
       return session;
     },
